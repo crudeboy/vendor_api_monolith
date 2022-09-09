@@ -1,6 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import { AdminRoute, ShoppingRoute, UserRoute, VendorRoute } from "../routes";
 import path from "path";
+import { QuoteRoute } from "../routes/QuotesRoute";
 
 export default async (app: Application) => {
 	app.use(express.json());
@@ -11,6 +12,7 @@ export default async (app: Application) => {
 	app.use("/vendor", VendorRoute);
 	app.use("/shopping", ShoppingRoute);
 	app.use('/user', UserRoute)
+	app.use('/quote', QuoteRoute)
 
 	app.get("/", (req: Request, res: Response) => {
 		console.log("i am");

@@ -103,7 +103,7 @@ export const AddFood = async (req: Request, res: Response) => {
 		const imagesNames = files.map((file) => file.filename);
 
 		const foodCreated = await Food.create({ vendorId: vendor._id, name, foodType, description, category, readyTime, price, rating: 0, images: imagesNames });
-		vendor.foods.push(foodCreated);
+		vendor.foods.push(foodCreated); //saving the entire foods item to the vendor model...hmmm
 		const result = await vendor.save();
 		return res.json(result);
 	}

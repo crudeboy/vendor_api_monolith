@@ -38,3 +38,8 @@ export interface EditCustomerInputs {
 	phone?: string;
 	email?: string;
 }
+
+export interface OrderInputs {
+	_id: string
+	unit: number
+}

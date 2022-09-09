@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction, json } from "express";
-import { CreateCustomerInputs, CustomerPayload, EditCustomerInputs, UserLoginInputs } from "../dto/Customer.dto";
+import { CreateCustomerInputs, CustomerPayload, EditCustomerInputs, OrderInputs, UserLoginInputs } from "../dto/Customer.dto";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
-import { Customer } from "../models";
+import { Customer, Food } from "../models";
 import { GenerateSalt, GeneratePassword, GenerateOtp, onOTPRequest, GeneratedSignature, Validatepassword } from "../utility";
 import { AuthPayload } from "../dto/Auth.dto";
 import { EditVendorInputs } from "../dto";
+import { Order } from "../models/Order";
 
 export const CustomerSignUp = async (req: Request, res: Response, next: NextFunction) => {
 	const customerInputs = plainToClass(CreateCustomerInputs, req.body);
@@ -157,4 +158,87 @@ export const EditCustomerProfile = async (req: Request, res: Response, next: Nex
 	const existingVendor = await profile.save();
 	console.log(existingVendor, "existingVendor");
 	return res.status(200).json(existingVendor);
+};
+
+export const CreateOrder = async (req: Request, res: Response, next: NextFunction) => {
+	try {
+		//grab the current user login details
+		const user = req.user;
+		//create the order id
+		const orderId = `${Math.floor(Math.random() * 89999) + 1000}`;
+		const profile = await Customer.findById(user._id);
+
+		const cart = <[OrderInputs]>req.body;
+		let cartItems = [];
+		let netAmount = 0.0;
+		//grab order items from request [{id: xx, unit: xx}]
+		//calculate order amount
+		const foods = await Food.find()
+			.where("_id")
+			.in(cart.map((item) => item._id))
+			.exec();
+		console.log(foods, "foods");
+
+		foods.map((food) => {
+			cart.map(({ _id, unit }) => {
+				console.log(food._id, "food._id", _id, "_id");
+				if (food._id == _id) {
+					console.log("i entered here aw far");
+					netAmount += food.price * unit;
+					cartItems.push({ food, unit });
+				}
+			});
+		});
+		console.log(cartItems, "cartItems");
+		// return res.status(200).json("updatedProfile");
+		// //create order with item description
+		const order = await Order.create({
+			orderId,
+			items: cartItems,
+			totalAmount: netAmount,
+			orderDate: Date.now(),
+			paidThrough: "cash", //cash, Credit card, wallet
+			paymentResponse: "working on it",
+			orderStatus: "waiting",
+		});
+
+		console.log(order, "order");
+		if (order) {
+			profile.orders.push(order);
+			await profile.save();
+			return res.status(200).json(order);
+		}
+
+		//update orders to user account
+	} catch (error) {
+		console.log(error, "error");
+	}
+};
+
+export const GetOrders = async (req: Request, res: Response, next: NextFunction) => {
+	const customer = req.user;
+
+	if (customer) {
+		const profile = await Customer.findById(customer._id).populate("orders");
+		if (profile) {
+			return res.status(200).json(profile.orders);
+		}
+	}
+
+	return res.status(400).json({ msg: "Orders not found" });
+};
+
+export const GetOrderById = async (req: Request, res: Response, next: NextFunction) => {
+	const user = req.user
+	const orderId = req.params.id;
+	console.log(orderId, "orderId")
+	if (orderId) {
+		const order = await Order.findById(orderId).populate("items.food");
+
+		if (order) {
+			return res.status(200).json(order);
+		}
+	}
+
+	return res.status(400).json({ msg: "Order not found" });
 };
