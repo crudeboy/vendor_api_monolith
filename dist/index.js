@@ -45,10 +45,8 @@ var Database_1 = __importDefault(require("./services/Database"));
 var config_1 = require("./config");
 var dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-// require('dotenv').config()
-console.log(process.env.PORT);
 var StartServer = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var app, PORt;
+    var app;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -59,8 +57,7 @@ var StartServer = function () { return __awaiter(void 0, void 0, void 0, functio
                 return [4 /*yield*/, (0, ExpressApp_1.default)(app)];
             case 2:
                 _a.sent();
-                PORt = process.env.PORT;
-                app.listen(PORt, function () {
+                app.listen(config_1.PORT, function () {
                     console.clear();
                     console.log("App is listening on port ".concat(config_1.PORT));
                 });
